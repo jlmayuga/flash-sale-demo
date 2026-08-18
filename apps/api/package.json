@@ -1,0 +1,32 @@
+{
+  "name": "flash-sale-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal Express API with PostgreSQL",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --legacy-watch --watch src --ext js src/server.js",
+    "test": "jest --runInBand",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:integration": "jest tests/integration --runInBand",
+    "stress": "node tests/stress/claim.stress.js",
+    "stress:spike": "REQUESTS=10000 CONCURRENCY=250 STOCK=5000 node tests/stress/claim.stress.js",
+    "stress:soak": "DURATION_SECONDS=60 CONCURRENCY=100 STOCK=100000 node tests/stress/claim.stress.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.13.3",
+    "redis": "^6.2.1"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
+  }
+}
