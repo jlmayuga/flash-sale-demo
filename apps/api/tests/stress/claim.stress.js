@@ -1,12 +1,13 @@
+require('dotenv').config()
+
 const { performance } = require('node:perf_hooks')
 
-const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(
-  /\/$/,
-  '',
-)
-const requests = positiveInteger('REQUESTS', 200)
-const concurrency = positiveInteger('CONCURRENCY', 50)
-const stock = positiveInteger('STOCK', 100)
+const baseUrl = (
+  process.env.BASE_URL || `http://localhost:${process.env.API_PORT || 5000}`
+).replace(/\/$/, '')
+const requests = positiveInteger('REQUESTS', 2000)
+const concurrency = positiveInteger('CONCURRENCY', 2000)
+const stock = positiveInteger('STOCK', 1000)
 const durationSeconds = nonNegativeNumber('DURATION_SECONDS', 0)
 const adminUsername = process.env.ADMIN_USERNAME || 'admin'
 const adminPassword = process.env.ADMIN_PASSWORD || 'change_me'
@@ -207,7 +208,16 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message)
+  if (
+    error.message === 'fetch failed' ||
+    error.cause?.code === 'ECONNREFUSED'
+  ) {
+    console.error(
+      `Could not connect to ${baseUrl}. Start the API with "npm run dev:api" or set BASE_URL to a running stack.`,
+    )
+  } else {
+    console.error(error.message)
+  }
   if (error.body) {
     console.error(JSON.stringify(error.body, null, 2))
   }

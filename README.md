@@ -156,7 +156,13 @@ npm run test:unit
 npm run test:integration
 ```
 
-The unit suite isolates the sale service and verifies identifier validation, upcoming-sale rejection, per-user limits, sold-out reservations, successful durable purchases, and reservation compensation when PostgreSQL fails. The integration suite sends HTTP requests through the Express application with Supertest and verifies sale listing, status lookup, claim creation, and structured API errors.
+The API unit suite isolates the sale service and verifies identifier validation, upcoming-sale rejection, per-user limits, sold-out reservations, successful durable purchases, and reservation compensation when PostgreSQL fails. The UI unit suite uses Vitest and Testing Library to verify login submission and feedback, customer identifier handling, purchase-limit enforcement, and dialog behavior. The integration suite sends HTTP requests through the Express application with Supertest and verifies sale listing, status lookup, claim creation, and structured API errors.
+
+Run the UI unit tests:
+
+```bash
+npm run test:ui
+```
 
 The tests do not require Docker because external persistence is mocked at the service boundary. The end-to-end stress test below exercises the real PostgreSQL and Redis integrations.
 
@@ -183,7 +189,7 @@ Start the complete stack:
 docker compose up --build -d
 ```
 
-Run the default scenario of 200 requests, 50 concurrent workers, and 100 available units:
+Run the default scenario of 2,000 users making simultaneous purchase attempts for 1,000 available units:
 
 ```bash
 npm run test:stress
@@ -202,24 +208,24 @@ npm run test:stress:soak
 Configuration is available through environment variables:
 
 ```bash
-BASE_URL=http://localhost:3000 \
-REQUESTS=1000 \
-CONCURRENCY=100 \
-STOCK=500 \
+BASE_URL=http://localhost:5000 \
+REQUESTS=2000 \
+CONCURRENCY=2000 \
+STOCK=1000 \
 DURATION_SECONDS=0 \
 ADMIN_USERNAME=admin \
 ADMIN_PASSWORD=change_me \
 npm run test:stress
 ```
 
-`BASE_URL` should point to the UI/Nginx origin so the test covers the same request path used by customers. The admin credentials must match the API environment. Each run creates a uniquely named sale and prints its ID, response counts, elapsed time, throughput, p50/p95 latency, and final database inventory.
+By default, the runner loads `apps/api/.env` and connects directly to `http://localhost:$API_PORT` (or port `5000` when `API_PORT` is unset), which works with `npm run dev:api`. Set `BASE_URL=http://localhost:3000` to exercise the complete UI/Nginx request path instead. The admin credentials must match the API environment. Each run creates a uniquely named sale and prints its ID, response counts, elapsed time, throughput, p50/p95 latency, and final database inventory.
 
 ### Expected stress-test outcome
 
 For the default scenario:
 
-- exactly 100 requests must return HTTP `201` (`PURCHASE_SUCCESSFUL`);
-- the remaining 100 should return HTTP `409` with `SOLD_OUT`;
+- exactly 1,000 requests must return HTTP `201` (`PURCHASE_SUCCESSFUL`);
+- the remaining 1,000 should return HTTP `409` with `SOLD_OUT`;
 - final `remainingStock` should be `0`, never negative;
 - there should be no HTTP `500` responses, duplicate purchase IDs, or more successful purchases than starting inventory.
 
