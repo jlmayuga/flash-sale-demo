@@ -1,4 +1,4 @@
-# Flash Sale Monorepo
+# Flashy - Flash Sale Demo
 
 This repository contains a Flash Sale API and frontend organized as npm workspaces. Docker Compose provides a complete local environment for building and running the application and its supporting services from one place.
 
