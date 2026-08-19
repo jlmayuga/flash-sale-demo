@@ -18,7 +18,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./apps/api/src/database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
-
+      - ./apps/api/src/database/seed.sql:/docker-entrypoint-initdb.d/002-seed.sql:ro
   redis:
     image: redis:8-alpine
     command: ["redis-server", "--appendonly", "yes"]
