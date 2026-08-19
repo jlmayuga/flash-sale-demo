@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-flash_sale}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flash_sale_local}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d postgres"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -19,6 +19,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./apps/api/src/database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
       - ./apps/api/src/database/seed.sql:/docker-entrypoint-initdb.d/002-seed.sql:ro
+
+  db-init:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flash_sale}
+      POSTGRES_USER: ${POSTGRES_USER:-flash_sale}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flash_sale_local}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./apps/api/src/database:/database:ro
+    command: ["sh", "/database/init-db.sh"]
+    restart: "no"
+
   redis:
     image: redis:8-alpine
     command: ["redis-server", "--appendonly", "yes"]
@@ -71,8 +86,8 @@ services:
       REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-3000}
       REDIS_RECONNECT_MAX_DELAY_MS: ${REDIS_RECONNECT_MAX_DELAY_MS:-2000}
     depends_on:
-      db:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     healthcheck:
